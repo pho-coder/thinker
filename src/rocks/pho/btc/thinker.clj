@@ -4,7 +4,8 @@
             [clojure.tools.cli :refer [parse-opts]]
 
             [rocks.pho.btc.thinker.config :refer [env]]
-            [rocks.pho.btc.thinker.watcher :as watcher])
+            [rocks.pho.btc.thinker.watcher :as watcher]
+            [rocks.pho.btc.thinker.utils :as utils])
   (:gen-class))
 
 (def cli-options
@@ -25,5 +26,8 @@
     (when-not (nil? (:errors opts))
       (log/error opts)
       (System/exit 1))
-    (let [file (:file options)]
-      (log/info file))))
+    (let [file (:file options)
+          lines (clojure.string/split-lines (slurp file))]
+      (log/info file)
+      (log/info "lines count:" (count lines))
+      (log/info (utils/parse-one-line (first lines))))))
