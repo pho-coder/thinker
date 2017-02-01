@@ -30,5 +30,8 @@
           lines (clojure.string/split-lines (slurp file))]
       (log/info file)
       (log/info "lines count:" (count lines))
+      (let [first-detail (:detail (utils/parse-one-line (first lines)))]
+        (watcher/init-wallet (:p-new first-detail) (:timestamp first-detail)))
       (doseq [one lines]
-        (watcher/watch-once (utils/parse-one-line one))))))
+        (watcher/watch-once (utils/parse-one-line one)))
+      (log/info (reverse watcher/recent-orders)))))
