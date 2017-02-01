@@ -30,4 +30,5 @@
           lines (clojure.string/split-lines (slurp file))]
       (log/info file)
       (log/info "lines count:" (count lines))
-      (log/info (utils/parse-one-line (first lines))))))
+      (doseq [one lines]
+        (watcher/watch-once (utils/parse-one-line one))))))
