@@ -11,7 +11,7 @@
                                     :type ""
                                     :amount 0})
 
-(mount/defstate recent-orders :start (list))
+(mount/defstate orders :start (list))
 
 (mount/defstate wallet :start {:start-cny 0M
                                :cny 0M
@@ -66,7 +66,7 @@
     (mount/start-with {#'last-top-point {:price new-price
                                          :ts ts
                                          :datetime datetime}})
-    (mount/start-with {#'recent-orders (conj recent-orders trade-point)})))
+    (mount/start-with {#'orders (conj orders trade-point)})))
 
 (defn sell
   [btc new-price ts]
@@ -87,7 +87,7 @@
                                       :datetime datetime
                                       :type "ask"
                                       :amount btc}})
-    (mount/start-with {#'recent-orders (conj recent-orders trade-point)})))
+    (mount/start-with {#'orders (conj orders trade-point)})))
 
 (defn check-recent-points
   []

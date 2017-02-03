@@ -5,7 +5,8 @@
 
             [rocks.pho.btc.thinker.config :refer [env]]
             [rocks.pho.btc.thinker.watcher :as watcher]
-            [rocks.pho.btc.thinker.utils :as utils])
+            [rocks.pho.btc.thinker.utils :as utils]
+            [rocks.pho.btc.thinker.dealer :as dealer])
   (:gen-class))
 
 (def cli-options
@@ -27,11 +28,16 @@
       (log/error opts)
       (System/exit 1))
     (let [file (:file options)
-          lines (clojure.string/split-lines (slurp file))]
+          lines (map #(utils/parse-one-line %) (clojure.string/split-lines (slurp file)))
+          first-detail (:detail (first lines))]
       (log/info file)
-      (log/info "lines count:" (count lines))
-      (let [first-detail (:detail (utils/parse-one-line (first lines)))]
-        (watcher/init-wallet (:p-new first-detail) (:timestamp first-detail)))
+      (watcher/init-wallet (:p-new first-detail) (:timestamp first-detail))
       (doseq [one lines]
-        (watcher/watch-once (utils/parse-one-line one)))
-      (log/info (reverse watcher/recent-orders)))))
+        (watcher/watch-once one))
+      (log/info (reverse watcher/orders))
+      (log/info (dealer/prn-analysis-info lines))
+      (log/info (dealer/prn-analysis-orders (reverse watcher/orders)))
+      (log/info "diff wallet:" (- (:cny watcher/wallet)
+                                  (:p-new first-detail)))
+      (log/info "check times:" (:check-times env))
+      (log/info "must sell rate:" (:must-sell-rate env)))))
