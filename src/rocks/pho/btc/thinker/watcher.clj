@@ -128,10 +128,10 @@
 
 (defn init-wallet [cny ts]
   (mount/start-with {#'wallet {:start-cny (bigdec cny)
-                                    :cny (bigdec cny)
-                                    :btc 0M
-                                    :ts ts
-                                    :datetime (utils/get-readable-time ts)}})
+                               :cny (bigdec cny)
+                               :btc 0M
+                               :ts ts
+                               :datetime (utils/get-readable-time ts)}})
   (log/info "finish init wallet:" wallet))
 
 (defn watch-once [one]
