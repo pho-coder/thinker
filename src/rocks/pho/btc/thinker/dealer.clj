@@ -34,6 +34,52 @@
         dealed-info (map #(let [detail (:detail %)]
                             {:price (:p-new detail)
                              :ts (:timestamp detail)}) info)
+        trend-lines (let [first-one (first dealed-info)
+                          second-one (second dealed-info)
+                          diff-price (- (:price second-one)
+                                        (:price first-one))]
+                      (loop [index 2
+                             one-list (nthrest dealed-info 2)
+                             highest-lowest-price {:highest-price (if (>= diff-price 0)
+                                                                    (:price second-one)
+                                                                    (:price first-one))
+                                                   :highest-ts (if (>= diff-price 0)
+                                                                 (:ts second-one)
+                                                                 (:ts first-one))
+                                                   :highest-index (if (>= diff-price 0)
+                                                                    1
+                                                                    0)
+                                                   :lowest-price (if (<= diff-price 0)
+                                                                   (:price second-one)
+                                                                   (:price first-one))
+                                                   :lowest-ts (if (<= diff-price 0)
+                                                                (:ts second-one)
+                                                                (:ts first-one))
+                                                   :lowest-index (if (<= diff-price 0)
+                                                                   1
+                                                                   0)}
+                             trend-lines (list {:start-index 0
+                                                :start-price (:price first-one)
+                                                :start-ts (:ts first-one)
+                                                :end-index 1
+                                                :end-price (:price second-one)
+                                                :end-ts (:ts second-one)
+                                                :trend (calc-up-down (:price second-one)
+                                                                     (:price first-one))})]
+                        (if (empty? one-list)
+                          trend-lines
+                          (let [one (first one-list)
+                                last-line (last trend-lines)
+                                trend (calc-up-down (:price one)
+                                                    (:price (:start-price last-line)))
+                                last-trend (:trend last-line)
+                                start-trend (calc-up-down (:price one)
+                                                          (:start-price last-line))
+                                highest-trend (calc-up-down (:price one)
+                                                            (:highest-price highest-lowest-price))
+                                lowest-trend (calc-up-down (:price one)
+                                                           (:lowest-price highest-lowest-price))]
+                            ()))))
         trends-list (loop [one-list (rest dealed-info)
                            last-one (first dealed-info)
                            re (list (assoc (first dealed-info)
@@ -72,7 +118,9 @@
                                              :start-ts (:ts one)
                                              :end-ts (:ts one)
                                              :times 1}
-)))))))]
+                                            )))))))
+        trends2 (map #(assoc % :diff-price (- (:end-price %)
+                                              (:start-price %))) trends)]
     {:first-price (:p-new first-detail)
      :last-price (:p-new last-detail)
      :length (.size info)
