@@ -37,20 +37,20 @@
         trend-lines (let [first-one (first dealed-info)
                           change-highest-lowest-price (fn [highest-lowest-price new-one new-index]
                                                         (let [new-price (:price new-one)
-                                                              new-ts (:ts new-one)]
-                                                          (cond
-                                                            (>= new-price (:highest-price highest-lowest-price))
-                                                            (assoc highest-lowest-price
-                                                                   :highest-price new-price
-                                                                   :highest-ts new-ts
-                                                                   :highest-index new-index)
-                                                            (<= new-price (:lowest-price highest-lowest-price))
-                                                            (assoc highest-lowest-price
-                                                                   :lowest-price new-price
-                                                                   :lowest-ts new-ts
-                                                                   :lowest-index new-index)
-                                                            :else
-                                                            highest-lowest-price)))]
+                                                              new-ts (:ts new-one)
+                                                              judge-highest (if (>= new-price (:highest-price highest-lowest-price))
+                                                                              (assoc highest-lowest-price
+                                                                                     :highest-price new-price
+                                                                                     :highest-ts new-ts
+                                                                                     :highest-index new-index)
+                                                                              highest-lowest-price)
+                                                              judge-lowest (if (<= new-price (:lowest-price judge-highest))
+                                                                             (assoc judge-highest
+                                                                                    :lowest-price new-price
+                                                                                    :lowest-ts new-ts
+                                                                                    :lowest-index new-index)
+                                                                             judge-highest)]
+                                                          judge-lowest))]
                       (loop [index 1
                              one-list (rest dealed-info)
                              highest-lowest-price {:highest-price (:price first-one)
@@ -88,7 +88,12 @@
                                                                                   :end-ts (:ts one)))))
                                                       (recur (inc index)
                                                              (rest one-list)
-                                                             (change-highest-lowest-price highest-lowest-price one index)
+                                                             {:highest-price (:price one)
+                                                              :highest-ts (:ts one)
+                                                              :highest-index index
+                                                              :lowest-price (:lowest-price highest-lowest-price)
+                                                              :lowest-ts (:lowest-ts highest-lowest-price)
+                                                              :lowest-index (:lowest-index highest-lowest-price)}
                                                              (concat (concat (drop-last trend-lines)
                                                                              (list (assoc last-line
                                                                                           :end-index (:lowest-index highest-lowest-price)
@@ -112,7 +117,12 @@
                                                                                      :end-ts (:ts one)))))
                                                          (recur (inc index)
                                                                 (rest one-list)
-                                                                (change-highest-lowest-price highest-lowest-price one index)
+                                                                {:highest-price (:highest-price highest-lowest-price)
+                                                                 :highest-ts (:highest-ts highest-lowest-price)
+                                                                 :highest-index (:highest-index highest-lowest-price)
+                                                                 :lowest-price (:price one)
+                                                                 :lowest-ts (:ts one)
+                                                                 :lowest-index index}
                                                                 (concat (concat (drop-last trend-lines)
                                                                                 (list (assoc last-line
                                                                                              :end-index (:highest-index highest-lowest-price)
@@ -133,11 +143,16 @@
                                                                 :end-index index
                                                                 :end-price (:price one)
                                                                 :end-ts (:ts one)
-                                                                :trend (:trend last-line))))))))))]
+                                                                :trend (:trend last-line))))))))))
+        trends2 (map #(assoc %
+                             :diff-price (format "%.2f" (- (:end-price %)
+                                                           (:start-price %)))
+                             :times (inc (- (:end-index %)
+                                            (:start-index %)))) trend-lines)]
     {:first-price (:p-new first-detail)
      :last-price (:p-new last-detail)
      :length (.size info)
-     :trends trend-lines}))
+     :trends trends2}))
 
 (defn prn-analysis-info
   [info]
